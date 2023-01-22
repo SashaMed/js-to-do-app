@@ -32,22 +32,111 @@ const tasks = [
   ];
   
   (function(arrOfTasks) {
-    const objOfTasks = arrOfTasks.reduce((acc, task) => {
+    const tasksFromLS = []
+    const keys = [];
+    for (let key in localStorage)
+    {
+      keys.push(key);
+      try {
+        let t = JSON.parse(localStorage.getItem(key));
+        if (t)
+          tasksFromLS.push(t);
+      } catch (e) {
+        continue;
+      }
+    }
+    console.log(tasksFromLS);
+    tasksFromLS.reverse();
+
+
+    const objOfTasks = tasksFromLS.reduce((acc, task) => {
         acc[task._id] = task;
         return acc;
     }, {});
-    
+    // const objOfTasks = tasksFromLS;
 
+    const themes = {
+      default: {
+        '--base-text-color': '#212529',
+        '--header-bg': '#007bff',
+        '--header-text-color': '#fff',
+        '--default-btn-bg': '#007bff',
+        '--default-btn-text-color': '#fff',
+        '--default-btn-hover-bg': '#0069d9',
+        '--default-btn-border-color': '#0069d9',
+        '--danger-btn-bg': '#dc3545',
+        '--danger-btn-text-color': '#fff',
+        '--danger-btn-hover-bg': '#bd2130',
+        '--danger-btn-border-color': '#dc3545',
+        '--input-border-color': '#ced4da',
+        '--input-bg-color': '#fff',
+        '--input-text-color': '#495057',
+        '--input-focus-bg-color': '#fff',
+        '--input-focus-text-color': '#495057',
+        '--input-focus-border-color': '#80bdff',
+        '--input-focus-box-shadow': '0 0 0 0.2rem rgba(0, 123, 255, 0.25)',
+      },
+      dark: {
+        '--base-text-color': '#212529',
+        '--header-bg': '#343a40',
+        '--header-text-color': '#fff',
+        '--default-btn-bg': '#58616b',
+        '--default-btn-text-color': '#fff',
+        '--default-btn-hover-bg': '#292d31',
+        '--default-btn-border-color': '#343a40',
+        '--default-btn-focus-box-shadow':
+          '0 0 0 0.2rem rgba(141, 143, 146, 0.25)',
+        '--danger-btn-bg': '#b52d3a',
+        '--danger-btn-text-color': '#fff',
+        '--danger-btn-hover-bg': '#88222c',
+        '--danger-btn-border-color': '#88222c',
+        '--input-border-color': '#ced4da',
+        '--input-bg-color': '#fff',
+        '--input-text-color': '#495057',
+        '--input-focus-bg-color': '#fff',
+        '--input-focus-text-color': '#495057',
+        '--input-focus-border-color': '#78818a',
+        '--input-focus-box-shadow': '0 0 0 0.2rem rgba(141, 143, 146, 0.25)',
+        '--background-color': '#5a4b4b',
+
+      },
+      light: {
+        '--base-text-color': '#212529',
+        '--header-bg': '#fff',
+        '--header-text-color': '#212529',
+        '--default-btn-bg': '#fff',
+        '--default-btn-text-color': '#212529',
+        '--default-btn-hover-bg': '#e8e7e7',
+        '--default-btn-border-color': '#343a40',
+        '--default-btn-focus-box-shadow':
+          '0 0 0 0.2rem rgba(141, 143, 146, 0.25)',
+        '--danger-btn-bg': '#f1b5bb',
+        '--danger-btn-text-color': '#212529',
+        '--danger-btn-hover-bg': '#ef808a',
+        '--danger-btn-border-color': '#e2818a',
+        '--input-border-color': '#ced4da',
+        '--input-bg-color': '#fff',
+        '--input-text-color': '#495057',
+        '--input-focus-bg-color': '#fff',
+        '--input-focus-text-color': '#495057',
+        '--input-focus-border-color': '#78818a',
+        '--input-focus-box-shadow': '0 0 0 0.2rem rgba(141, 143, 146, 0.25)',
+      },
+    };
+    const startTheme = localStorage.getItem('app-theme') || 'default';
+
+    const themeSelect = document.getElementById('themeSelect');
     const listContainer = document.querySelector('.tasks-list-section .list-group');
     const form = document.forms['addTask'];
     const inputTitle = form.elements['title'];
     const inputBody = form.elements['body'];
 
 
-
+    setTheme(startTheme);
     renderAllTasks(objOfTasks);
     form.addEventListener('submit', onFormSybmitHandler, true);
     listContainer.addEventListener('click', onDeleteHandler);
+    themeSelect.addEventListener('change', onThemeSelectHandler);
 
     function renderAllTasks(tasks) {
 
@@ -105,6 +194,7 @@ const tasks = [
         return;
       }
       const task = createNewTask(titleVal, bodyVal);
+      localStorage.setItem(task._id, JSON.stringify(task));
       const listItem = listItemTemplate(task);
       listContainer.insertAdjacentElement("afterbegin", listItem); 
       form.reset();
@@ -128,6 +218,7 @@ const tasks = [
       const isConfirm = confirm(`Are you sure to delete task ${title}?`);
       if (!isConfirm) return isConfirm;
       delete objOfTasks[id];
+      localStorage.removeItem(id);
       return isConfirm;
     }
 
@@ -145,6 +236,21 @@ const tasks = [
         const confirmed = deleteTask(taskId);
         deleteTaskFromHtml(confirmed, parent);
       }
+    }
+
+
+    function onThemeSelectHandler(e) {
+      const selectedTheme = themeSelect.value;
+      setTheme(selectedTheme);
+      localStorage.setItem('app-theme', selectedTheme);
+    }
+
+
+    function setTheme(name) {
+      const selected = themes[name];
+      Object.entries(selected).forEach(([key, value])=> {
+        document.documentElement.style.setProperty(key, value);
+      })
     }
   })(tasks);
   
